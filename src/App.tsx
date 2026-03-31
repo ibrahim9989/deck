@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, AlertTriangle, Info, ShieldCheck, BarChart3, Map, Briefcase, Download, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { ChevronDown, AlertTriangle, Info, ShieldCheck, BarChart3, Map, Briefcase, Download, Loader2, Presentation } from 'lucide-react';
 
 type Tab = 'accounting' | 'compliance' | 'financial' | 'roadmap' | 'proposal';
 
@@ -272,6 +270,7 @@ export default function App() {
   };
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isGeneratingPPTX, setIsGeneratingPPTX] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPDF = async () => {
@@ -279,6 +278,201 @@ export default function App() {
     // This is the most reliable way to get a high-quality PDF in the browser
     // The @media print styles in index.css will handle the deck formatting
     window.print();
+  };
+
+  const handleDownloadPPTX = async () => {
+    setIsGeneratingPPTX(true);
+    try {
+      const PptxGenJS = (await import('pptxgenjs')).default;
+      const pptx = new PptxGenJS();
+
+      // Set Layout to 16:9 (Native for Google Slides)
+      pptx.layout = 'LAYOUT_16x9';
+
+      // Set Presentation Properties
+      pptx.title = "vCFO Saudi IT Proposal";
+      pptx.subject = "Strategic Financial Advisory";
+      pptx.author = "Strategic Financial Advisory Services";
+
+      // Define Theme Colors
+      const NAVY = "0A1628";
+      const GOLD = "C9A84C";
+      const CREAM = "FAF7F0";
+      const WHITE = "FFFFFF";
+
+      // 1. Cover Page
+      let slide = pptx.addSlide();
+      slide.background = { color: NAVY };
+      slide.addText("Confidential | Strategic Advisory", { x: 0.5, y: 0.5, w: "90%", fontSize: 10, color: GOLD, charSpacing: 3 });
+      slide.addText("Virtual CFO Proposal\nfor IT Companies in KSA", { 
+        x: 0.5, y: 2.0, w: "90%", h: 2.0, 
+        fontSize: 44, fontFace: "Georgia", bold: true, color: WHITE, 
+        align: "left" 
+      });
+      slide.addText("Accounting · Compliance · Financial Management · VAT · Zakat · Vision 2030", { 
+        x: 0.5, y: 4.0, w: "90%", fontSize: 18, color: "A0A0A0", fontFace: "Arial" 
+      });
+      slide.addShape(pptx.ShapeType.rect, { x: 0.5, y: 5.0, w: 3.5, h: 0.5, fill: { color: GOLD, transparency: 80 }, line: { color: GOLD, width: 1 } });
+      slide.addText("BIG 4 + McKINSEY FRAMEWORK", { x: 0.6, y: 5.1, w: 3.3, fontSize: 12, color: GOLD, bold: true });
+
+      // 2-6. Accounting Issues & Solutions (5 Slides)
+      accountingIssues.forEach((issue, idx) => {
+        let s = pptx.addSlide();
+        s.background = { color: CREAM };
+        s.addText(`Accounting Issue ${idx + 1}: ${issue.title}`, { x: 0.5, y: 0.5, w: "90%", fontSize: 24, fontFace: "Georgia", bold: true, color: NAVY });
+        s.addText(issue.meta, { x: 0.5, y: 1.0, w: "90%", fontSize: 12, italic: true, color: "5A5A7A" });
+        s.addText(issue.description, { x: 0.5, y: 1.5, w: "90%", fontSize: 14, color: "333333" });
+        
+        s.addShape(pptx.ShapeType.rect, { x: 0.5, y: 2.5, w: "90%", h: 2.5, fill: { color: "E8F5EE" }, line: { color: "1A6B3C", width: 2 } });
+        s.addText("STRATEGIC SOLUTIONS", { x: 0.7, y: 2.7, w: "80%", fontSize: 12, bold: true, color: "1A6B3C" });
+        issue.solutions.forEach((sol, sIdx) => {
+          s.addText(`• ${sol}`, { x: 0.7, y: 3.1 + (sIdx * 0.4), w: "80%", fontSize: 12, color: "1A4A2E" });
+        });
+      });
+
+      // 7. Compliance (1 Slide)
+      let compSlide = pptx.addSlide();
+      compSlide.background = { color: CREAM };
+      compSlide.addText("Regulatory & Tax Compliance", { x: 0.5, y: 0.5, w: "90%", fontSize: 28, fontFace: "Georgia", bold: true, color: NAVY });
+      
+      const tableHeaderOptions = { bold: true, fill: { color: "F0EBE0" }, color: NAVY, align: "center" as const };
+      const tableCellOptions = { color: "333333", fontSize: 10 };
+      const tablePenaltyOptions = { color: "8B1A1A", bold: true, fontSize: 10 };
+
+      const rows: any[] = [
+        [
+          { text: "Compliance Area", options: tableHeaderOptions },
+          { text: "Critical Issue", options: tableHeaderOptions },
+          { text: "Penalty Risk", options: tableHeaderOptions }
+        ]
+      ];
+
+      complianceData.forEach(row => {
+        rows.push([
+          { text: row.area, options: { ...tableCellOptions, bold: true } },
+          { text: row.issue, options: tableCellOptions },
+          { text: row.penalty, options: tablePenaltyOptions }
+        ]);
+      });
+
+      compSlide.addTable(rows, { x: 0.5, y: 1.5, w: 9.0, border: { type: "solid", color: "E0D8C8" } });
+
+      // 8-13. Financial Management (6 Slides)
+      financialIssues.forEach((issue, idx) => {
+        let s = pptx.addSlide();
+        s.background = { color: CREAM };
+        s.addText(`Financial Management Issue ${idx + 1}: ${issue.title}`, { x: 0.5, y: 0.5, w: "90%", fontSize: 24, fontFace: "Georgia", bold: true, color: NAVY });
+        s.addText(issue.description, { x: 0.5, y: 1.5, w: "90%", fontSize: 16, color: "333333" });
+        
+        s.addShape(pptx.ShapeType.rect, { x: 0.5, y: 3.0, w: "90%", h: 2.0, fill: { color: WHITE }, line: { color: GOLD, width: 1 } });
+        s.addText("RECOMMENDED ACTIONS", { x: 0.7, y: 3.2, w: "80%", fontSize: 12, bold: true, color: NAVY });
+        issue.solutions.forEach((sol, sIdx) => {
+          s.addText(`• ${sol}`, { x: 0.7, y: 3.6 + (sIdx * 0.4), w: "80%", fontSize: 12, color: "5A5A7A" });
+        });
+      });
+
+      // 14. Roadmap (1 Slide)
+      let roadSlide = pptx.addSlide();
+      roadSlide.background = { color: CREAM };
+      roadSlide.addText("90-Day Implementation Roadmap", { x: 0.5, y: 0.5, w: "90%", fontSize: 28, fontFace: "Georgia", bold: true, color: NAVY });
+      
+      const roadmapItems = [
+        { day: "Day 1-30", title: "Assessment & Foundation", desc: "Diagnostic review, ZATCA integration audit, and compliance gap analysis." },
+        { day: "Day 31-60", title: "Optimization & Control", desc: "Cash flow modeling, internal controls implementation, and IFRS alignment." },
+        { day: "Day 61-90", title: "Strategic Advisory", desc: "Budgeting, strategic planning, and ongoing vCFO performance management." }
+      ];
+
+      roadmapItems.forEach((item, idx) => {
+        roadSlide.addShape(pptx.ShapeType.rect, { x: 0.5 + (idx * 3.1), y: 1.5, w: 3.0, h: 3.5, fill: { color: WHITE }, line: { color: GOLD, width: 1 } });
+        roadSlide.addText(item.day, { x: 0.6 + (idx * 3.1), y: 1.7, w: 2.8, fontSize: 14, bold: true, color: GOLD });
+        roadSlide.addText(item.title, { x: 0.6 + (idx * 3.1), y: 2.1, w: 2.8, fontSize: 16, bold: true, color: NAVY });
+        roadSlide.addText(item.desc, { x: 0.6 + (idx * 3.1), y: 2.7, w: 2.8, fontSize: 12, color: "5A5A7A" });
+      });
+
+      // 15. vCFO Scope (1 Slide)
+      let scopeSlide = pptx.addSlide();
+      scopeSlide.background = { color: NAVY };
+      scopeSlide.addText("vCFO Engagement Scope", { x: 0.5, y: 0.5, w: "90%", fontSize: 32, fontFace: "Georgia", bold: true, color: GOLD });
+      
+      const scopeItems = [
+        { title: "Compliance & Tax", desc: "VAT, Zakat, WHT, GOSI, Nitaqat, PDPL, FATOORAH." },
+        { title: "Financial Reporting", desc: "IFRS monthly accounts, board packs, annual statements." },
+        { title: "Financial Planning", desc: "Annual budget, rolling forecasts, 3-year strategic model." },
+        { title: "Strategic Finance", desc: "Fundraising, grant management, Vision 2030 alignment." }
+      ];
+
+      scopeItems.forEach((item, idx) => {
+        let xPos = idx < 2 ? 0.5 : 5.2;
+        let yPos = idx % 2 === 0 ? 1.5 : 3.5;
+        scopeSlide.addText(item.title, { x: xPos, y: yPos, w: 4.5, fontSize: 20, bold: true, color: GOLD });
+        scopeSlide.addText(item.desc, { x: xPos, y: yPos + 0.5, w: 4.5, fontSize: 14, color: "D0D0D0" });
+      });
+
+      scopeSlide.addText('"Big 4 technical rigour with McKinsey strategic insight"', { 
+        x: 0.5, y: 6.0, w: "90%", fontSize: 18, italic: true, color: GOLD, align: "center" 
+      });
+
+      // 16. Engagement Models & Pricing (New Slide)
+      let pricingSlide = pptx.addSlide();
+      pricingSlide.background = { color: CREAM };
+      pricingSlide.addText("Engagement Models & Pricing", { x: 0.5, y: 0.5, w: "90%", fontSize: 28, fontFace: "Georgia", bold: true, color: NAVY });
+      
+      const pricingHeaderOptions = { bold: true, fill: { color: "F0EBE0" }, color: NAVY, align: "center" as const, fontSize: 10 };
+      const pricingCellOptions = { color: "333333", fontSize: 10, valign: "middle" as const };
+
+      const pricingRows: any[] = [
+        [
+          { text: "ENGAGEMENT MODEL", options: pricingHeaderOptions },
+          { text: "HOURS/MONTH", options: pricingHeaderOptions },
+          { text: "BEST FOR", options: pricingHeaderOptions },
+          { text: "EST. MONTHLY FEE", options: pricingHeaderOptions }
+        ],
+        [
+          { text: "Essentials\n(Compliance-focused)", options: { ...pricingCellOptions, bold: true } },
+          { text: "20–30 hrs", options: pricingCellOptions },
+          { text: "Early-stage IT companies (SAR 5–20M revenue)", options: pricingCellOptions },
+          { text: "SAR 8,000–15,000", options: { ...pricingCellOptions, bold: true, align: "right" } }
+        ],
+        [
+          { text: "Growth\n(Full vCFO function)", options: { ...pricingCellOptions, bold: true } },
+          { text: "40–60 hrs", options: pricingCellOptions },
+          { text: "Growing IT firms (SAR 20–100M revenue)", options: pricingCellOptions },
+          { text: "SAR 18,000–35,000", options: { ...pricingCellOptions, bold: true, align: "right" } }
+        ],
+        [
+          { text: "Strategic\n(Investor/IPO ready)", options: { ...pricingCellOptions, bold: true } },
+          { text: "80–100 hrs", options: pricingCellOptions },
+          { text: "Scale-up IT companies (SAR 100M+ or pre-Series A)", options: pricingCellOptions },
+          { text: "SAR 40,000–70,000", options: { ...pricingCellOptions, bold: true, align: "right" } }
+        ]
+      ];
+
+      pricingSlide.addTable(pricingRows, { x: 0.5, y: 1.5, w: 9.0, border: { type: "solid", color: "E0D8C8" } });
+
+      // 17. Why vCFO Summary (New Slide)
+      let whySlide = pptx.addSlide();
+      whySlide.background = { color: CREAM };
+      
+      whySlide.addShape(pptx.ShapeType.rect, { x: 0.5, y: 2.0, w: 9.0, h: 3.5, fill: { color: "F0EBE0" }, line: { color: GOLD, width: 1 } });
+      
+      whySlide.addText("Why a vCFO beats hiring in-house for Saudi IT companies:", { 
+        x: 0.7, y: 2.3, w: 8.6, fontSize: 18, bold: true, color: NAVY 
+      });
+      
+      whySlide.addText(
+        "Access to Big 4-trained tax specialists, IFRS experts, and banking advisors across all compliance areas. " +
+        "Deep knowledge of Saudi-specific regulations (ZATCA, GOSI, SAMA, NDMO) combined with global best practices. " +
+        "Scalable — increases hours during audit season, reduces in quiet periods. " +
+        "No recruitment risk, GOSI contributions, or housing allowance obligations.",
+        { x: 0.7, y: 3.0, w: 8.6, fontSize: 14, color: "5A5A7A", lineSpacing: 24 }
+      );
+
+      pptx.writeFile({ fileName: "vCFO_Saudi_IT_Proposal_Deck.pptx" });
+    } catch (error) {
+      console.error('PPTX generation failed:', error);
+    } finally {
+      setIsGeneratingPPTX(false);
+    }
   };
 
   return (
@@ -407,10 +601,78 @@ export default function App() {
             <p className="mt-4 text-xs tracking-widest uppercase text-gold/60">Contact for Custom Engagement Plan</p>
           </div>
         </div>
+
+        <div className="pdf-slide h-[297mm] w-[210mm] bg-cream p-16">
+          <h2 className="mb-8 font-serif text-3xl font-bold text-navy border-b border-border-saudi pb-4">Implementation Roadmap</h2>
+          <div className="space-y-8">
+            {roadmap.map((phase, i) => (
+              <div key={i} className="relative pl-12 border-l-2 border-gold/30 pb-4 last:pb-0">
+                <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-gold shadow-sm" />
+                <div className="mb-1 text-sm font-bold text-navy uppercase tracking-wider">{phase.phase}</div>
+                <div className="mb-2 text-xs font-semibold text-gold">{phase.title}</div>
+                <ul className="space-y-1 text-[10px] text-text-muted">
+                  {phase.items.slice(0, 5).map((item, idx) => <li key={idx}>• {item}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pdf-slide h-[297mm] w-[210mm] bg-cream p-16">
+          <h2 className="mb-8 font-serif text-3xl font-bold text-navy border-b border-border-saudi pb-4">Engagement Models & Pricing</h2>
+          <div className="overflow-hidden rounded-xl border border-border-saudi bg-white shadow-sm">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-cream-mid">
+                <tr>
+                  <th className="p-4 font-bold uppercase tracking-wider">Engagement Model</th>
+                  <th className="p-4 font-bold uppercase tracking-wider">Hours/Month</th>
+                  <th className="p-4 font-bold uppercase tracking-wider">Best For</th>
+                  <th className="p-4 font-bold uppercase tracking-wider text-right">Est. Monthly Fee</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-t border-border-saudi">
+                  <td className="p-4 font-bold text-navy">Essentials<br/><span className="text-[10px] font-normal text-text-muted">Compliance-focused</span></td>
+                  <td className="p-4">20–30 hrs</td>
+                  <td className="p-4">Early-stage IT companies (SAR 5–20M revenue)</td>
+                  <td className="p-4 font-bold text-right">SAR 8,000–15,000</td>
+                </tr>
+                <tr className="border-t border-border-saudi">
+                  <td className="p-4 font-bold text-navy">Growth<br/><span className="text-[10px] font-normal text-text-muted">Full vCFO function</span></td>
+                  <td className="p-4">40–60 hrs</td>
+                  <td className="p-4">Growing IT firms (SAR 20–100M revenue)</td>
+                  <td className="p-4 font-bold text-right">SAR 18,000–35,000</td>
+                </tr>
+                <tr className="border-t border-border-saudi">
+                  <td className="p-4 font-bold text-navy">Strategic<br/><span className="text-[10px] font-normal text-text-muted">Investor/IPO ready</span></td>
+                  <td className="p-4">80–100 hrs</td>
+                  <td className="p-4">Scale-up IT companies (SAR 100M+ or pre-Series A)</td>
+                  <td className="p-4 font-bold text-right">SAR 40,000–70,000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="pdf-slide h-[297mm] w-[210mm] bg-cream p-16 flex flex-col justify-center">
+          <div className="rounded-2xl border border-gold/30 bg-white p-12 shadow-lg">
+            <h2 className="mb-6 font-serif text-2xl font-bold text-navy">Why a vCFO beats hiring in-house for Saudi IT companies:</h2>
+            <p className="text-base text-text-muted leading-relaxed">
+              Access to Big 4-trained tax specialists, IFRS experts, and banking advisors across all compliance areas. 
+              Deep knowledge of Saudi-specific regulations (ZATCA, GOSI, SAMA, NDMO) combined with global best practices. 
+              Scalable — increases hours during audit season, reduces in quiet periods. 
+              No recruitment risk, GOSI contributions, or housing allowance obligations.
+            </p>
+          </div>
+          <div className="mt-12 text-center">
+            <p className="text-xs font-bold uppercase tracking-[4px] text-gold">Strategic Financial Advisory Services</p>
+            <p className="mt-2 text-[10px] text-text-muted">Riyadh · Jeddah · Dammam</p>
+          </div>
+        </div>
       </div>
 
       {/* Cover Section */}
-      <header className="relative overflow-hidden bg-navy px-10 pt-12 pb-9 text-white">
+      <header className="relative overflow-hidden bg-navy px-10 pt-12 pb-9 text-white no-print">
         <div className="absolute -top-15 -right-15 h-75 w-75 rounded-full border border-gold/15" />
         <div className="absolute -bottom-20 left-30 h-100 w-100 rounded-full border border-gold/8" />
         
@@ -419,23 +681,42 @@ export default function App() {
             <p className="mb-4 text-[10px] font-medium tracking-[3px] uppercase text-gold">
               Confidential | Strategic Advisory
             </p>
-            <button
-              onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF}
-              className="flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-gold-light transition-all hover:bg-gold/20 disabled:opacity-50"
-            >
-              {isGeneratingPDF ? (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Preparing...
-                </>
-              ) : (
-                <>
-                  <Download className="h-3 w-3" />
-                  Print / Save PDF
-                </>
-              )}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDownloadPPTX}
+                disabled={isGeneratingPPTX}
+                className="flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-gold-light transition-all hover:bg-gold/20 disabled:opacity-50"
+              >
+                {isGeneratingPPTX ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Preparing...
+                  </>
+                ) : (
+                  <>
+                    <Presentation className="h-3 w-3" />
+                    Download PPTX / Google Slides
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
+                className="flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-gold-light transition-all hover:bg-gold/20 disabled:opacity-50"
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Preparing...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-3 w-3" />
+                    Print / Save PDF
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           <h1 className="mb-2 font-serif text-3xl font-bold leading-tight">
             Virtual <span className="text-gold">CFO</span> Proposal<br />
@@ -682,6 +963,19 @@ export default function App() {
               <div className="mt-4 rounded-lg bg-cream-mid p-4 text-xs leading-relaxed text-text-muted">
                 <strong className="text-navy">Why a vCFO beats hiring in-house for Saudi IT companies:</strong><br />
                 Access to Big 4-trained tax specialists, IFRS experts, and banking advisors across all compliance areas. Deep knowledge of Saudi-specific regulations (ZATCA, GOSI, SAMA, NDMO) combined with global best practices. Scalable — increases hours during audit season, reduces in quiet periods. No recruitment risk, GOSI contributions, or housing allowance obligations.
+              </div>
+
+              <div className="mt-6 flex items-center gap-4 rounded-xl border border-gold/20 bg-white p-6 shadow-sm">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold">
+                  <Presentation className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-navy">Google Slides & PowerPoint Ready</h4>
+                  <p className="mt-1 text-xs text-text-muted leading-relaxed">
+                    The generated 15-slide deck is optimized for both Microsoft PowerPoint and Google Slides. 
+                    To use with Google Slides, simply upload the downloaded <code className="rounded bg-cream px-1">.pptx</code> file to your Google Drive and open it — all layouts and branding will be preserved.
+                  </p>
+                </div>
               </div>
             </motion.section>
           )}
