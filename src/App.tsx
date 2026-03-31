@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, AlertTriangle, Info, ShieldCheck, BarChart3, Map, Briefcase } from 'lucide-react';
+import { ChevronDown, AlertTriangle, Info, ShieldCheck, BarChart3, Map, Briefcase, Download, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 type Tab = 'accounting' | 'compliance' | 'financial' | 'roadmap' | 'proposal';
 
@@ -269,17 +271,172 @@ export default function App() {
     setOpenIssueId(openIssueId === id ? null : id);
   };
 
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPDF = async () => {
+    if (!pdfRef.current) return;
+    setIsGeneratingPDF(true);
+
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const slides = pdfRef.current.querySelectorAll('.pdf-slide');
+      
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i] as HTMLElement;
+        const canvas = await html2canvas(slide, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#FAF7F0'
+        });
+        
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      }
+      
+      pdf.save('vCFO_Saudi_IT_Proposal.pdf');
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-cream font-sans text-text-saudi">
+      {/* Hidden PDF Content */}
+      <div className="fixed -left-[9999px] top-0 overflow-hidden" ref={pdfRef}>
+        <div className="pdf-slide w-[210mm] bg-navy p-12 text-white">
+          <p className="mb-4 text-[10px] font-medium tracking-[3px] uppercase text-gold">Confidential | Strategic Advisory</p>
+          <h1 className="mb-2 font-serif text-4xl font-bold leading-tight">Virtual <span className="text-gold">CFO</span> Proposal<br />for IT Companies in KSA</h1>
+          <p className="mb-10 text-lg font-light text-white/65">Accounting · Compliance · Financial Management · VAT · Zakat · Vision 2030</p>
+          <div className="flex gap-4">
+            <div className="rounded border border-gold/30 bg-gold/12 px-4 py-2 text-xs tracking-wider text-gold-light">BIG 4 + McKINSEY FRAMEWORK</div>
+            <div className="rounded border border-gold/30 bg-gold/12 px-4 py-2 text-xs tracking-wider text-gold-light">SAUDI ARABIA 2025</div>
+          </div>
+        </div>
+
+        <div className="pdf-slide w-[210mm] bg-cream p-12">
+          <h2 className="mb-4 font-serif text-2xl font-bold text-navy">Accounting Issues & Solutions</h2>
+          <div className="space-y-4">
+            {accountingIssues.map(issue => (
+              <div key={issue.id} className="rounded-lg border border-border-saudi bg-white p-4">
+                <div className="mb-1 text-sm font-bold text-navy">{issue.title}</div>
+                <div className="mb-2 text-[10px] text-text-muted italic">{issue.meta}</div>
+                <p className="mb-2 text-xs text-text-muted">{issue.description}</p>
+                <div className="rounded-r border-l-2 border-green-saudi bg-green-light p-2">
+                  <div className="text-[9px] font-bold uppercase text-green-saudi">Solutions</div>
+                  <ul className="text-[10px] text-[#1A4A2E]">
+                    {issue.solutions.slice(0, 3).map((s, idx) => <li key={idx}>• {s}</li>)}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pdf-slide w-[210mm] bg-cream p-12">
+          <h2 className="mb-4 font-serif text-2xl font-bold text-navy">Regulatory & Tax Compliance</h2>
+          <div className="overflow-hidden rounded-lg border border-border-saudi bg-white">
+            <table className="w-full text-left text-[10px]">
+              <thead className="bg-cream-mid">
+                <tr>
+                  <th className="p-2 font-bold uppercase">Area</th>
+                  <th className="p-2 font-bold uppercase">Issue</th>
+                  <th className="p-2 font-bold uppercase">Penalty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {complianceData.map((row, i) => (
+                  <tr key={i} className="border-t border-border-saudi">
+                    <td className="p-2 font-bold">{row.area}</td>
+                    <td className="p-2">{row.issue}</td>
+                    <td className="p-2 text-red-saudi">{row.penalty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="pdf-slide w-[210mm] bg-cream p-12">
+          <h2 className="mb-4 font-serif text-2xl font-bold text-navy">Financial Management</h2>
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="rounded border border-border-saudi bg-white p-4">
+              <div className="text-xl font-bold text-navy">90–180 Days</div>
+              <div className="text-[10px] text-text-muted uppercase">Gov Payment Cycle</div>
+            </div>
+            <div className="rounded border border-border-saudi bg-white p-4">
+              <div className="text-xl font-bold text-navy">15% VAT</div>
+              <div className="text-[10px] text-text-muted uppercase">Cash Flow Impact</div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {financialIssues.slice(0, 3).map(issue => (
+              <div key={issue.id} className="rounded-lg border border-border-saudi bg-white p-4">
+                <div className="text-sm font-bold text-navy">{issue.title}</div>
+                <p className="text-xs text-text-muted">{issue.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pdf-slide w-[210mm] bg-navy p-12 text-white">
+          <h2 className="mb-6 font-serif text-3xl font-bold text-gold-light">vCFO Engagement Scope</h2>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="font-bold text-gold">Compliance & Tax</div>
+              <p className="text-xs text-white/70">ZATCA VAT, Zakat/CIT, WHT, GOSI, Nitaqat, PDPL, FATOORAH</p>
+              <div className="font-bold text-gold">Financial Reporting</div>
+              <p className="text-xs text-white/70">IFRS-compliant monthly accounts, board packs, annual statements</p>
+            </div>
+            <div className="space-y-4">
+              <div className="font-bold text-gold">Financial Planning</div>
+              <p className="text-xs text-white/70">Annual budget, rolling forecasts, 3-year strategic model</p>
+              <div className="font-bold text-gold">Strategic Finance</div>
+              <p className="text-xs text-white/70">Fundraising support, grant management, banking relations</p>
+            </div>
+          </div>
+          <div className="mt-12 rounded border border-gold/30 p-4 text-center">
+            <p className="text-sm italic text-gold-light">"Big 4 technical rigour with McKinsey strategic insight"</p>
+          </div>
+        </div>
+      </div>
+
       {/* Cover Section */}
       <header className="relative overflow-hidden bg-navy px-10 pt-12 pb-9 text-white">
         <div className="absolute -top-15 -right-15 h-75 w-75 rounded-full border border-gold/15" />
         <div className="absolute -bottom-20 left-30 h-100 w-100 rounded-full border border-gold/8" />
         
         <div className="relative z-10">
-          <p className="mb-4 text-[10px] font-medium tracking-[3px] uppercase text-gold">
-            Confidential | Strategic Advisory
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="mb-4 text-[10px] font-medium tracking-[3px] uppercase text-gold">
+              Confidential | Strategic Advisory
+            </p>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPDF}
+              className="flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-gold-light transition-all hover:bg-gold/20 disabled:opacity-50"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Generating Deck...
+                </>
+              ) : (
+                <>
+                  <Download className="h-3 w-3" />
+                  Download PDF Deck
+                </>
+              )}
+            </button>
+          </div>
           <h1 className="mb-2 font-serif text-3xl font-bold leading-tight">
             Virtual <span className="text-gold">CFO</span> Proposal<br />
             for IT Companies in KSA
