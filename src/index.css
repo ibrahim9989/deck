@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "IBM Plex Sans", sans-serif;
+
+  --color-gold: #C9A84C;
+  --color-gold-light: #E8D5A0;
+  --color-gold-dark: #8B6914;
+  --color-navy: #0A1628;
+  --color-navy-mid: #1A2E4A;
+  --color-navy-light: #2A4A72;
+  --color-cream: #FAF7F0;
+  --color-cream-mid: #F0EBE0;
+  --color-green-saudi: #1A6B3C;
+  --color-green-light: #E8F5EE;
+  --color-red-saudi: #8B1A1A;
+  --color-red-light: #FDF0F0;
+  --color-amber-saudi: #7A4F00;
+  --color-amber-light: #FFF8E8;
+  --color-text-saudi: #1A1A2E;
+  --color-text-muted: #5A5A7A;
+  --color-text-light: #8A8AAA;
+  --color-border-saudi: #E0D8C8;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-cream text-text-saudi leading-relaxed text-sm;
+  }
+}
