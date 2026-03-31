@@ -30,3 +30,52 @@
     @apply font-sans bg-cream text-text-saudi leading-relaxed text-sm;
   }
 }
+
+/* Print Styles for PDF Deck Format */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide UI elements */
+  header, 
+  nav, 
+  button, 
+  .no-print {
+    display: none !important;
+  }
+
+  /* Show the hidden PDF content */
+  .print-only {
+    display: block !important;
+    position: static !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: auto !important;
+  }
+
+  .pdf-slide {
+    page-break-after: always;
+    height: 297mm;
+    width: 210mm;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Ensure colors are preserved */
+  .bg-navy { background-color: #0A1628 !important; color: white !important; }
+  .text-gold { color: #C9A84C !important; }
+  .bg-gold\/12 { background-color: rgba(201, 168, 76, 0.12) !important; }
+  .border-gold\/30 { border-color: rgba(201, 168, 76, 0.3) !important; }
+  .bg-cream { background-color: #FAF7F0 !important; }
+  .bg-white { background-color: #FFFFFF !important; }
+  .bg-green-light { background-color: #E8F5EE !important; }
+  .bg-red-light { background-color: #FDF0F0 !important; }
+}

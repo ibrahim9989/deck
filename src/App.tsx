@@ -275,65 +275,43 @@ export default function App() {
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPDF = async () => {
-    if (!pdfRef.current) return;
-    setIsGeneratingPDF(true);
-
-    try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const slides = pdfRef.current.querySelectorAll('.pdf-slide');
-      
-      for (let i = 0; i < slides.length; i++) {
-        const slide = slides[i] as HTMLElement;
-        const canvas = await html2canvas(slide, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#FAF7F0'
-        });
-        
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      }
-      
-      pdf.save('vCFO_Saudi_IT_Proposal.pdf');
-    } catch (error) {
-      console.error('PDF generation failed:', error);
-    } finally {
-      setIsGeneratingPDF(false);
-    }
+    // Primary method: window.print()
+    // This is the most reliable way to get a high-quality PDF in the browser
+    // The @media print styles in index.css will handle the deck formatting
+    window.print();
   };
 
   return (
     <div className="min-h-screen bg-cream font-sans text-text-saudi">
-      {/* Hidden PDF Content */}
-      <div className="fixed -left-[9999px] top-0 overflow-hidden" ref={pdfRef}>
-        <div className="pdf-slide w-[210mm] bg-navy p-12 text-white">
-          <p className="mb-4 text-[10px] font-medium tracking-[3px] uppercase text-gold">Confidential | Strategic Advisory</p>
-          <h1 className="mb-2 font-serif text-4xl font-bold leading-tight">Virtual <span className="text-gold">CFO</span> Proposal<br />for IT Companies in KSA</h1>
-          <p className="mb-10 text-lg font-light text-white/65">Accounting · Compliance · Financial Management · VAT · Zakat · Vision 2030</p>
-          <div className="flex gap-4">
-            <div className="rounded border border-gold/30 bg-gold/12 px-4 py-2 text-xs tracking-wider text-gold-light">BIG 4 + McKINSEY FRAMEWORK</div>
-            <div className="rounded border border-gold/30 bg-gold/12 px-4 py-2 text-xs tracking-wider text-gold-light">SAUDI ARABIA 2025</div>
+      {/* Hidden PDF Content - Optimized for Capture & Print */}
+      <div 
+        className="print-only pointer-events-none absolute top-0 left-0 -z-50 opacity-0 overflow-hidden" 
+        ref={pdfRef}
+        aria-hidden="true"
+      >
+        <div className="pdf-slide flex h-[297mm] w-[210mm] flex-col justify-center bg-navy p-20 text-white">
+          <p className="mb-6 text-xs font-medium tracking-[4px] uppercase text-gold">Confidential | Strategic Advisory</p>
+          <h1 className="mb-4 font-serif text-5xl font-bold leading-tight">Virtual <span className="text-gold">CFO</span> Proposal<br />for IT Companies in KSA</h1>
+          <p className="mb-12 text-xl font-light text-white/65">Accounting · Compliance · Financial Management · VAT · Zakat · Vision 2030</p>
+          <div className="flex gap-6">
+            <div className="rounded-lg border border-gold/30 bg-gold/12 px-6 py-3 text-sm tracking-wider text-gold-light">BIG 4 + McKINSEY FRAMEWORK</div>
+            <div className="rounded-lg border border-gold/30 bg-gold/12 px-6 py-3 text-sm tracking-wider text-gold-light">SAUDI ARABIA 2025</div>
           </div>
+          <div className="mt-20 text-[10px] text-white/30 uppercase tracking-widest">© 2025 Strategic Financial Advisory Services</div>
         </div>
 
-        <div className="pdf-slide w-[210mm] bg-cream p-12">
-          <h2 className="mb-4 font-serif text-2xl font-bold text-navy">Accounting Issues & Solutions</h2>
-          <div className="space-y-4">
+        <div className="pdf-slide h-[297mm] w-[210mm] bg-cream p-16">
+          <h2 className="mb-8 font-serif text-3xl font-bold text-navy border-b border-border-saudi pb-4">Accounting Issues & Solutions</h2>
+          <div className="space-y-6">
             {accountingIssues.map(issue => (
-              <div key={issue.id} className="rounded-lg border border-border-saudi bg-white p-4">
-                <div className="mb-1 text-sm font-bold text-navy">{issue.title}</div>
-                <div className="mb-2 text-[10px] text-text-muted italic">{issue.meta}</div>
-                <p className="mb-2 text-xs text-text-muted">{issue.description}</p>
-                <div className="rounded-r border-l-2 border-green-saudi bg-green-light p-2">
-                  <div className="text-[9px] font-bold uppercase text-green-saudi">Solutions</div>
-                  <ul className="text-[10px] text-[#1A4A2E]">
-                    {issue.solutions.slice(0, 3).map((s, idx) => <li key={idx}>• {s}</li>)}
+              <div key={issue.id} className="rounded-xl border border-border-saudi bg-white p-6 shadow-sm">
+                <div className="mb-1 text-base font-bold text-navy">{issue.title}</div>
+                <div className="mb-3 text-xs text-text-muted italic">{issue.meta}</div>
+                <p className="mb-4 text-sm text-text-muted leading-relaxed">{issue.description}</p>
+                <div className="rounded-r-lg border-l-4 border-green-saudi bg-green-light p-4">
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-green-saudi">Strategic Solutions</div>
+                  <ul className="space-y-1 text-xs text-[#1A4A2E]">
+                    {issue.solutions.slice(0, 4).map((s, idx) => <li key={idx} className="flex gap-2"><span>•</span> {s}</li>)}
                   </ul>
                 </div>
               </div>
@@ -341,23 +319,27 @@ export default function App() {
           </div>
         </div>
 
-        <div className="pdf-slide w-[210mm] bg-cream p-12">
-          <h2 className="mb-4 font-serif text-2xl font-bold text-navy">Regulatory & Tax Compliance</h2>
-          <div className="overflow-hidden rounded-lg border border-border-saudi bg-white">
-            <table className="w-full text-left text-[10px]">
+        <div className="pdf-slide h-[297mm] w-[210mm] bg-cream p-16">
+          <h2 className="mb-8 font-serif text-3xl font-bold text-navy border-b border-border-saudi pb-4">Regulatory & Tax Compliance</h2>
+          <div className="mb-6 rounded-lg border border-red-saudi/20 bg-red-light p-4 text-xs text-red-saudi">
+            <p className="font-bold">ZATCA FATOORAH Phase 2 Alert:</p>
+            <p>Mandatory real-time integration required for all IT B2B transactions. Non-compliance risks significant financial penalties and operational suspension.</p>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-border-saudi bg-white shadow-sm">
+            <table className="w-full text-left text-xs">
               <thead className="bg-cream-mid">
                 <tr>
-                  <th className="p-2 font-bold uppercase">Area</th>
-                  <th className="p-2 font-bold uppercase">Issue</th>
-                  <th className="p-2 font-bold uppercase">Penalty</th>
+                  <th className="p-4 font-bold uppercase tracking-wider">Compliance Area</th>
+                  <th className="p-4 font-bold uppercase tracking-wider">Critical Issue</th>
+                  <th className="p-4 font-bold uppercase tracking-wider">Penalty Risk</th>
                 </tr>
               </thead>
               <tbody>
                 {complianceData.map((row, i) => (
                   <tr key={i} className="border-t border-border-saudi">
-                    <td className="p-2 font-bold">{row.area}</td>
-                    <td className="p-2">{row.issue}</td>
-                    <td className="p-2 text-red-saudi">{row.penalty}</td>
+                    <td className="p-4 font-bold text-navy">{row.area}</td>
+                    <td className="p-4 leading-relaxed">{row.issue}</td>
+                    <td className="p-4 font-semibold text-red-saudi">{row.penalty}</td>
                   </tr>
                 ))}
               </tbody>
@@ -365,46 +347,64 @@ export default function App() {
           </div>
         </div>
 
-        <div className="pdf-slide w-[210mm] bg-cream p-12">
-          <h2 className="mb-4 font-serif text-2xl font-bold text-navy">Financial Management</h2>
-          <div className="mb-6 grid grid-cols-2 gap-4">
-            <div className="rounded border border-border-saudi bg-white p-4">
-              <div className="text-xl font-bold text-navy">90–180 Days</div>
-              <div className="text-[10px] text-text-muted uppercase">Gov Payment Cycle</div>
+        <div className="pdf-slide h-[297mm] w-[210mm] bg-cream p-16">
+          <h2 className="mb-8 font-serif text-3xl font-bold text-navy border-b border-border-saudi pb-4">Financial Management Strategy</h2>
+          <div className="mb-10 grid grid-cols-2 gap-6">
+            <div className="rounded-xl border border-border-saudi bg-white p-8 shadow-sm">
+              <div className="text-4xl font-bold text-navy mb-2">90–180</div>
+              <div className="text-xs font-bold text-text-muted uppercase tracking-widest">Days Gov Payment Cycle</div>
+              <p className="mt-4 text-xs text-red-saudi">Severe working capital pressure requires proactive liquidity modeling.</p>
             </div>
-            <div className="rounded border border-border-saudi bg-white p-4">
-              <div className="text-xl font-bold text-navy">15% VAT</div>
-              <div className="text-[10px] text-text-muted uppercase">Cash Flow Impact</div>
+            <div className="rounded-xl border border-border-saudi bg-white p-8 shadow-sm">
+              <div className="text-4xl font-bold text-navy mb-2">15%</div>
+              <div className="text-xs font-bold text-text-muted uppercase tracking-widest">VAT Cash Impact</div>
+              <p className="mt-4 text-xs text-red-saudi">Monthly VAT outflows create recurring cash drains on B2B IT billing.</p>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {financialIssues.slice(0, 3).map(issue => (
-              <div key={issue.id} className="rounded-lg border border-border-saudi bg-white p-4">
-                <div className="text-sm font-bold text-navy">{issue.title}</div>
-                <p className="text-xs text-text-muted">{issue.description}</p>
+              <div key={issue.id} className="rounded-xl border border-border-saudi bg-white p-6 shadow-sm">
+                <div className="text-base font-bold text-navy mb-2">{issue.title}</div>
+                <p className="text-sm text-text-muted leading-relaxed">{issue.description}</p>
+                <div className="mt-4 flex gap-2">
+                  {issue.solutions.slice(0, 2).map((s, idx) => (
+                    <div key={idx} className="rounded bg-navy/5 px-3 py-1.5 text-[10px] text-navy font-medium">
+                      {s.split(' ').slice(0, 5).join(' ')}...
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="pdf-slide w-[210mm] bg-navy p-12 text-white">
-          <h2 className="mb-6 font-serif text-3xl font-bold text-gold-light">vCFO Engagement Scope</h2>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="font-bold text-gold">Compliance & Tax</div>
-              <p className="text-xs text-white/70">ZATCA VAT, Zakat/CIT, WHT, GOSI, Nitaqat, PDPL, FATOORAH</p>
-              <div className="font-bold text-gold">Financial Reporting</div>
-              <p className="text-xs text-white/70">IFRS-compliant monthly accounts, board packs, annual statements</p>
+        <div className="pdf-slide flex h-[297mm] w-[210mm] flex-col justify-center bg-navy p-20 text-white">
+          <h2 className="mb-10 font-serif text-4xl font-bold text-gold-light">vCFO Engagement Scope</h2>
+          <div className="grid grid-cols-2 gap-12">
+            <div className="space-y-8">
+              <div>
+                <div className="mb-2 text-lg font-bold text-gold">Compliance & Tax</div>
+                <p className="text-sm leading-relaxed text-white/70">ZATCA VAT, Zakat/CIT, WHT, GOSI, Nitaqat, PDPL, FATOORAH. Full regulatory oversight.</p>
+              </div>
+              <div>
+                <div className="mb-2 text-lg font-bold text-gold">Financial Reporting</div>
+                <p className="text-sm leading-relaxed text-white/70">IFRS-compliant monthly accounts, board packs, annual statements, and audit liaison.</p>
+              </div>
             </div>
-            <div className="space-y-4">
-              <div className="font-bold text-gold">Financial Planning</div>
-              <p className="text-xs text-white/70">Annual budget, rolling forecasts, 3-year strategic model</p>
-              <div className="font-bold text-gold">Strategic Finance</div>
-              <p className="text-xs text-white/70">Fundraising support, grant management, banking relations</p>
+            <div className="space-y-8">
+              <div>
+                <div className="mb-2 text-lg font-bold text-gold">Financial Planning</div>
+                <p className="text-sm leading-relaxed text-white/70">Annual budget, rolling forecasts, 3-year strategic model, and scenario analysis.</p>
+              </div>
+              <div>
+                <div className="mb-2 text-lg font-bold text-gold">Strategic Finance</div>
+                <p className="text-sm leading-relaxed text-white/70">Fundraising support, grant management (MCIT/KACST), and Vision 2030 alignment.</p>
+              </div>
             </div>
           </div>
-          <div className="mt-12 rounded border border-gold/30 p-4 text-center">
-            <p className="text-sm italic text-gold-light">"Big 4 technical rigour with McKinsey strategic insight"</p>
+          <div className="mt-20 rounded-xl border border-gold/30 bg-gold/5 p-8 text-center">
+            <p className="text-lg italic text-gold-light">"Big 4 technical rigour with McKinsey strategic insight"</p>
+            <p className="mt-4 text-xs tracking-widest uppercase text-gold/60">Contact for Custom Engagement Plan</p>
           </div>
         </div>
       </div>
@@ -427,12 +427,12 @@ export default function App() {
               {isGeneratingPDF ? (
                 <>
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Generating Deck...
+                  Preparing...
                 </>
               ) : (
                 <>
                   <Download className="h-3 w-3" />
-                  Download PDF Deck
+                  Print / Save PDF
                 </>
               )}
             </button>
